@@ -40,7 +40,7 @@ export function registerMessageHandlers(app: App) {
 
       await say({
         text: result.text,
-        blocks: [
+        blocks: ([
           {
             type: 'section',
             text: { type: 'mrkdwn', text: result.text },
@@ -58,7 +58,7 @@ export function registerMessageHandlers(app: App) {
                 },
               ]
             : []),
-        ],
+        ] as any[]),
       });
     } catch (error) {
       console.error('[DM handler] Error:', error);

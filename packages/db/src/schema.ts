@@ -83,11 +83,3 @@ export type Document = typeof documents.$inferSelect;
 export type NewDocument = typeof documents.$inferInsert;
 export type Chunk = typeof chunks.$inferSelect;
 export type NewChunk = typeof chunks.$inferInsert;
-
-export type ChunkMetadata = {
-  filename: string;
-  pageNumber?: number;
-  sectionTitle?: string;
-  chunkIndex: number;
-  totalChunks: number;
-};

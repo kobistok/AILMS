@@ -1,4 +1,10 @@
-import type { ChunkMetadata } from '@ailms/db';
+export type ChunkMetadata = {
+  filename: string;
+  pageNumber?: number;
+  sectionTitle?: string;
+  chunkIndex: number;
+  totalChunks: number;
+};
 
 export type TextChunk = {
   content: string;

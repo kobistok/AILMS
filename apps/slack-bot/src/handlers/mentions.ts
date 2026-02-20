@@ -35,7 +35,7 @@ export function registerMentionHandlers(app: App) {
       await say({
         text: result.text,
         thread_ts: event.thread_ts ?? event.ts,
-        blocks: buildResponseBlocks(result.text, result.toolCallCount),
+        blocks: buildResponseBlocks(result.text, result.toolCallCount) as any[],
       });
     } catch (error) {
       console.error('[Mention handler] Error:', error);

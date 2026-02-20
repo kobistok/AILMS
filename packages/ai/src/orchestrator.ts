@@ -1,4 +1,4 @@
-import { generateText, tool, type CoreMessage } from 'ai';
+import { generateText, tool, type CoreMessage, type Tool } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 import { getDb, products as productsTable } from '@ailms/db';
@@ -40,7 +40,8 @@ async function buildProductTools() {
     console.warn('[Orchestrator] No products found in database — tools list is empty');
   }
 
-  const tools: Record<string, ReturnType<typeof tool>> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tools: Record<string, Tool<any, any>> = {};
 
   for (const product of allProducts) {
     const toolName = `search_${product.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}`;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, getSupabase, products as productsTable, documents as documentsTable } from '@ailms/db';
+import { eq } from 'drizzle-orm';
 import { triggerDocumentIngestion } from '@ailms/ai';
 
 export async function POST(request: NextRequest) {
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
         const [existing] = await db
           .select()
           .from(productsTable)
-          .where(productsTable.name.eq ? productsTable.name.eq(productName) : undefined as never);
+          .where(eq(productsTable.name, productName));
         if (!existing) {
           return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }

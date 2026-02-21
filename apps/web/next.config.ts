@@ -1,12 +1,17 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Allow importing from workspace packages
   transpilePackages: ['@ailms/ai', '@ailms/db', '@ailms/ingest'],
 
-  experimental: {
-    // Required for Supabase server components
-    serverComponentsExternalPackages: ['pdf-parse', 'mammoth'],
+  serverExternalPackages: ['pdf-parse', 'mammoth'],
+
+  webpack(config) {
+    // Allow webpack to resolve .js imports as .ts sources (needed for ESM workspace packages)
+    config.resolve.extensionAlias = {
+      '.js': ['.ts', '.tsx', '.js', '.jsx'],
+      '.jsx': ['.tsx', '.jsx'],
+    };
+    return config;
   },
 };
 

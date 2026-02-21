@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   timestamp,
+  boolean,
   index,
   customType,
 } from 'drizzle-orm/pg-core';
@@ -76,6 +77,31 @@ export const chunks = pgTable(
   }),
 );
 
+// ─── profiles ─────────────────────────────────────────────────────────────────
+// One row per authenticated user (extends auth.users).
+export const profiles = pgTable('profiles', {
+  id: text('id').primaryKey(),  // Supabase auth.users UUID stored as text
+  displayName: text('display_name'),
+  orgName: text('org_name'),
+  industry: text('industry'),
+  employeeCount: text('employee_count'),
+  role: text('role').notNull().default('member'),
+  onboardingCompleted: boolean('onboarding_completed').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ─── invitations ──────────────────────────────────────────────────────────────
+// Admin-created email invitations for team members.
+export const invitations = pgTable('invitations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull(),
+  invitedBy: text('invited_by'),  // auth user ID
+  orgName: text('org_name'),
+  status: text('status').notNull().default('pending'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ─── Type exports ─────────────────────────────────────────────────────────────
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
@@ -83,3 +109,7 @@ export type Document = typeof documents.$inferSelect;
 export type NewDocument = typeof documents.$inferInsert;
 export type Chunk = typeof chunks.$inferSelect;
 export type NewChunk = typeof chunks.$inferInsert;
+export type Profile = typeof profiles.$inferSelect;
+export type NewProfile = typeof profiles.$inferInsert;
+export type Invitation = typeof invitations.$inferSelect;
+export type NewInvitation = typeof invitations.$inferInsert;

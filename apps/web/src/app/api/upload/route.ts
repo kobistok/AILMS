@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, getSupabase, products as productsTable, documents as documentsTable } from '@ailms/db';
+import { createSupabaseServerClient } from '@/lib/supabase';
 import { eq } from 'drizzle-orm';
-import { triggerDocumentIngestion } from '@ailms/ai';
+import { ingestDocumentSync } from '@ailms/ai';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const db = getDb();
     const supabase = getSupabase();
+
+    // Get authenticated user (middleware guarantees auth, but capture ID for product creation)
+    const authClient = await createSupabaseServerClient();
+    const { data: { user } } = await authClient.auth.getUser();
 
     // Resolve or create product
     let productId: string;
@@ -20,46 +25,31 @@ export async function POST(request: NextRequest) {
     } else if (productName) {
       const [product] = await db
         .insert(productsTable)
-        .values({
-          name: productName,
-          description: productDescription ?? '',
-        })
+        .values({ name: productName, description: productDescription ?? '', createdBy: user?.id ?? null })
         .onConflictDoNothing()
         .returning();
 
       if (!product) {
-        // Product already exists — look it up
-        const [existing] = await db
-          .select()
-          .from(productsTable)
-          .where(eq(productsTable.name, productName));
-        if (!existing) {
-          return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-        }
+        const [existing] = await db.select().from(productsTable).where(eq(productsTable.name, productName));
+        if (!existing) return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         productId = existing.id;
       } else {
         productId = product.id;
       }
     } else {
-      return NextResponse.json(
-        { error: 'Either productId or productName is required' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'Either productId or productName is required' }, { status: 400 });
     }
 
-    // Process each uploaded file
     const files = formData.getAll('files') as File[];
-    if (files.length === 0) {
-      return NextResponse.json({ error: 'No files provided' }, { status: 400 });
-    }
+    if (files.length === 0) return NextResponse.json({ error: 'No files provided' }, { status: 400 });
 
-    const results: Array<{ filename: string; documentId: string }> = [];
+    const results: Array<{ filename: string; documentId: string; chunkCount: number }> = [];
 
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
       const storagePath = `${productId}/${Date.now()}-${file.name}`;
 
-      // Upload to Supabase Storage
+      // Upload file to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(storagePath, buffer, {
@@ -86,23 +76,20 @@ export async function POST(request: NextRequest) {
         })
         .returning();
 
-      // Trigger Inngest ingestion job
-      await triggerDocumentIngestion({
+      // Run ingestion synchronously (extract → chunk → embed → store)
+      const { chunkCount } = await ingestDocumentSync({
         documentId: doc.id,
         productId,
         storagePath,
         filename: file.name,
       });
 
-      results.push({ filename: file.name, documentId: doc.id });
+      results.push({ filename: file.name, documentId: doc.id, chunkCount });
     }
 
     return NextResponse.json({ success: true, documents: results });
   } catch (error) {
     console.error('[Upload API]', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

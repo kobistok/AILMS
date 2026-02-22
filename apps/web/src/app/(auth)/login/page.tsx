@@ -1,19 +1,29 @@
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { createSupabaseServerClient } from '@/lib/supabase';
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
   async function signInWithGoogle() {
     'use server';
+    const headersList = await headers();
+    const origin = headersList.get('origin') ?? headersList.get('x-forwarded-proto') + '://' + headersList.get('host');
+
     const supabase = await createSupabaseServerClient();
-    const { data } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+        redirectTo: `${origin}/auth/callback`,
+        skipBrowserRedirect: true,
       },
     });
-    if (data.url) {
-      redirect(data.url);
+
+    if (error || !data.url) {
+      console.error('[Login] OAuth error:', error?.message ?? 'no URL returned');
+      redirect('/login?error=oauth_failed');
     }
+
+    redirect(data.url);
   }
 
   return (
@@ -21,6 +31,12 @@ export default function LoginPage() {
       <div className="bg-white rounded-lg border border-gray-200 p-8 w-full max-w-sm text-center shadow-sm">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">AILMS</h1>
         <p className="text-sm text-gray-500 mb-8">AI Sales Enablement</p>
+
+        {error && (
+          <p className="text-sm text-red-600 mb-4">
+            {error === 'oauth_failed' ? 'Google sign-in is not configured. Contact your admin.' : 'Sign-in failed. Please try again.'}
+          </p>
+        )}
 
         <form action={signInWithGoogle}>
           <button

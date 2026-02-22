@@ -55,12 +55,6 @@ export default async function DashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href="/upload"
-              className="border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
-            >
-              + Upload Content
-            </Link>
-            <Link
               href="/products/new"
               className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
             >

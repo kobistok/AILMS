@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function UploadPage() {
+type Product = { id: string; name: string; description: string };
+
+function UploadContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const existingProductId = searchParams.get('productId');
@@ -11,11 +13,22 @@ export default function UploadPage() {
   const [mode, setMode] = useState<'new' | 'existing'>(existingProductId ? 'existing' : 'new');
   const [productName, setProductName] = useState('');
   const [productDescription, setProductDescription] = useState('');
-  const [productId, setProductId] = useState(existingProductId ?? '');
+  const [selectedProductId, setSelectedProductId] = useState(existingProductId ?? '');
+  const [products, setProducts] = useState<Product[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then((r) => r.json())
+      .then((data: Product[]) => {
+        setProducts(data);
+        if (existingProductId && !selectedProductId) setSelectedProductId(existingProductId);
+      })
+      .catch(() => {});
+  }, [existingProductId, selectedProductId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,11 +43,9 @@ export default function UploadPage() {
         formData.append('productName', productName);
         formData.append('productDescription', productDescription);
       } else {
-        formData.append('productId', productId);
+        formData.append('productId', selectedProductId);
       }
-      for (const file of files) {
-        formData.append('files', file);
-      }
+      for (const file of files) formData.append('files', file);
 
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
       if (!res.ok) {
@@ -53,14 +64,20 @@ export default function UploadPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-xl font-semibold text-gray-900">Upload Content</h1>
-          <p className="text-sm text-gray-500">Add PDFs or Word documents to a product agent</p>
+        <div className="max-w-2xl mx-auto flex items-center gap-4">
+          <button onClick={() => router.push('/dashboard')} className="text-gray-400 hover:text-gray-600 text-sm">
+            ← Dashboard
+          </button>
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">Upload Content</h1>
+            <p className="text-sm text-gray-500">Add PDFs or Word documents to a product agent</p>
+          </div>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-8">
         <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg border border-gray-200 p-6">
+
           {/* Product selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Product</label>
@@ -69,9 +86,7 @@ export default function UploadPage() {
                 type="button"
                 onClick={() => setMode('new')}
                 className={`px-3 py-1.5 rounded text-sm font-medium border transition-colors ${
-                  mode === 'new'
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  mode === 'new' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                 }`}
               >
                 New product
@@ -79,11 +94,10 @@ export default function UploadPage() {
               <button
                 type="button"
                 onClick={() => setMode('existing')}
+                disabled={products.length === 0}
                 className={`px-3 py-1.5 rounded text-sm font-medium border transition-colors ${
-                  mode === 'existing'
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
+                  mode === 'existing' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                } disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 Existing product
               </button>
@@ -100,7 +114,7 @@ export default function UploadPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <textarea
-                  placeholder="Brief description (used by the AI to know when to search this product)"
+                  placeholder="Brief description — helps the AI know when to search this product"
                   value={productDescription}
                   onChange={(e) => setProductDescription(e.target.value)}
                   rows={2}
@@ -108,14 +122,17 @@ export default function UploadPage() {
                 />
               </div>
             ) : (
-              <input
-                type="text"
-                placeholder="Product ID"
-                value={productId}
-                onChange={(e) => setProductId(e.target.value)}
+              <select
+                value={selectedProductId}
+                onChange={(e) => setSelectedProductId(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="">Select a product...</option>
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
             )}
           </div>
 
@@ -149,6 +166,18 @@ export default function UploadPage() {
             />
           </div>
 
+          {status === 'uploading' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md px-4 py-3 text-sm text-blue-700">
+              Processing... extracting, chunking, and embedding your document. This may take a moment.
+            </div>
+          )}
+
+          {status === 'success' && (
+            <div className="bg-green-50 border border-green-200 rounded-md px-4 py-3 text-sm text-green-700">
+              Done! Redirecting to dashboard...
+            </div>
+          )}
+
           {errorMessage && (
             <p className="text-sm text-red-600">{errorMessage}</p>
           )}
@@ -156,10 +185,10 @@ export default function UploadPage() {
           <div className="flex items-center gap-3">
             <button
               type="submit"
-              disabled={status === 'uploading' || files.length === 0}
+              disabled={status === 'uploading' || status === 'success' || files.length === 0}
               className="bg-blue-600 text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {status === 'uploading' ? 'Uploading...' : status === 'success' ? 'Done!' : 'Upload'}
+              {status === 'uploading' ? 'Processing...' : 'Upload & Process'}
             </button>
             <button
               type="button"
@@ -172,5 +201,13 @@ export default function UploadPage() {
         </form>
       </main>
     </div>
+  );
+}
+
+export default function UploadPage() {
+  return (
+    <Suspense>
+      <UploadContent />
+    </Suspense>
   );
 }

@@ -1,4 +1,4 @@
-import { generateText, tool, type CoreMessage, type Tool } from 'ai';
+import { generateText, streamText, tool, type CoreMessage, type Tool } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 import { getDb, products as productsTable } from '@ailms/db';
@@ -100,4 +100,18 @@ export async function askOrchestrator(userMessage: string): Promise<string> {
     { role: 'user', content: userMessage },
   ]);
   return result.text;
+}
+
+/**
+ * Streaming variant — returns a streamText result for use with toDataStreamResponse().
+ */
+export async function streamOrchestrator(messages: OrchestratorMessage[]) {
+  const tools = await buildProductTools();
+  return streamText({
+    model: anthropic('claude-sonnet-4-6'),
+    system: SALES_ENABLEMENT_SYSTEM_PROMPT,
+    messages,
+    tools,
+    maxSteps: 5,
+  });
 }

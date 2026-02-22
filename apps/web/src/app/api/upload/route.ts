@@ -43,9 +43,6 @@ export async function POST(request: NextRequest) {
     const files = formData.getAll('files') as File[];
     if (files.length === 0) return NextResponse.json({ error: 'No files provided' }, { status: 400 });
 
-    const categoriesRaw = formData.get('categories') as string | null;
-    const categories = categoriesRaw ?? '[]';
-
     const results: Array<{ filename: string; documentId: string; chunkCount: number }> = [];
 
     for (const file of files) {
@@ -76,7 +73,6 @@ export async function POST(request: NextRequest) {
           filename: file.name,
           storagePath,
           mimeType: file.type || 'application/octet-stream',
-          categories,
           status: 'pending',
         })
         .returning();

@@ -5,14 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 type Product = { id: string; name: string; description: string };
 
-const CATEGORIES = [
-  { id: 'product-spec', label: 'Product Spec' },
-  { id: 'pricing', label: 'Pricing' },
-  { id: 'ideal-customer-profile', label: 'Ideal Customer Profile' },
-  { id: 'battle-cards', label: 'Battle Cards' },
-  { id: 'security-privacy', label: 'Security & Privacy' },
-] as const;
-
 function UploadContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,16 +16,9 @@ function UploadContent() {
   const [selectedProductId, setSelectedProductId] = useState(existingProductId ?? '');
   const [products, setProducts] = useState<Product[]>([]);
   const [files, setFiles] = useState<File[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  function toggleCategory(id: string) {
-    setCategories((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
-    );
-  }
 
   useEffect(() => {
     fetch('/api/products')
@@ -61,7 +46,6 @@ function UploadContent() {
         formData.append('productId', selectedProductId);
       }
       for (const file of files) formData.append('files', file);
-      formData.append('categories', JSON.stringify(categories));
 
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
       if (!res.ok) {
@@ -180,33 +164,6 @@ function UploadContent() {
               className="hidden"
               onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
             />
-          </div>
-
-          {/* Categories */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Content type
-              <span className="ml-1 text-gray-400 font-normal">(optional)</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((cat) => {
-                const selected = categories.includes(cat.id);
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => toggleCategory(cat.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      selected
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           {status === 'uploading' && (

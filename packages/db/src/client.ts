@@ -19,23 +19,14 @@ function getSupabaseClient() {
 
 // ─── Drizzle client (for typed SQL queries) ───────────────────────────────────
 function getDrizzleClient() {
-  const connectionString = process.env.DATABASE_URL ?? buildConnectionString();
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString || connectionString.includes('XX-XXXX')) {
+    throw new Error(
+      'DATABASE_URL is not set. Get it from Supabase → Project Settings → Database → Connection string (Transaction mode, port 6543)',
+    );
+  }
   const sql = postgres(connectionString, { max: 10 });
   return drizzle(sql, { schema });
-}
-
-function buildConnectionString(): string {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) {
-    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables');
-  }
-
-  // Extract project ref from Supabase URL: https://<ref>.supabase.co
-  const ref = new URL(url).hostname.split('.')[0];
-  // Direct postgres connection (transaction pooler on port 6543 or session on 5432)
-  return process.env.DATABASE_URL ?? `postgresql://postgres.${ref}:${key}@aws-0-us-east-1.pooler.supabase.com:6543/postgres`;
 }
 
 // Singleton instances (lazy init to avoid issues during import)

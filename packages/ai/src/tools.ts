@@ -18,7 +18,7 @@ export async function searchProduct(
   productId: string,
   query: string,
   matchCount = 5,
-  matchThreshold = 0.5,
+  matchThreshold = 0.3,
 ): Promise<SearchResult[]> {
   const supabase = getSupabase();
   const embedding = await embedQuery(query);

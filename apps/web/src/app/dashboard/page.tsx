@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getDb, getSupabase, products as productsTable, documents as documentsTable, profiles as profilesTable } from '@ailms/db';
 import { createSupabaseServerClient } from '@/lib/supabase';
 import { eq, sql } from 'drizzle-orm';
+import { UserMenu } from '@/components/UserMenu';
 
 async function getProductsWithMeta() {
   const db = getDb();
@@ -52,20 +53,7 @@ export default async function DashboardPage() {
             <h1 className="text-xl font-semibold text-gray-900">AILMS</h1>
             <p className="text-sm text-gray-500">AI Sales Enablement</p>
           </div>
-          <div className="flex items-center gap-4">
-            {profile?.role === 'admin' && (
-              <Link href="/settings/team" className="text-sm text-gray-500 hover:text-gray-700">
-                Settings
-              </Link>
-            )}
-            <span className="text-sm text-gray-600">
-              {profile?.display_name ?? user.email}
-            </span>
-            <form action={signOut}>
-              <button type="submit" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                Sign out
-              </button>
-            </form>
+          <div className="flex items-center gap-3">
             <Link
               href="/upload"
               className="border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
@@ -78,6 +66,11 @@ export default async function DashboardPage() {
             >
               + New Agent
             </Link>
+            <UserMenu
+              displayName={profile?.display_name ?? user.email ?? 'Account'}
+              isAdmin={profile?.role === 'admin'}
+              signOut={signOut}
+            />
           </div>
         </div>
       </header>

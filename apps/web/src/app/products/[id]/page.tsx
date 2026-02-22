@@ -10,6 +10,22 @@ async function getProduct(id: string) {
   return product ?? null;
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  'product-spec': 'Product Spec',
+  'pricing': 'Pricing',
+  'ideal-customer-profile': 'Ideal Customer Profile',
+  'battle-cards': 'Battle Cards',
+  'security-privacy': 'Security & Privacy',
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'product-spec': 'bg-blue-50 text-blue-700',
+  'pricing': 'bg-green-50 text-green-700',
+  'ideal-customer-profile': 'bg-purple-50 text-purple-700',
+  'battle-cards': 'bg-amber-50 text-amber-700',
+  'security-privacy': 'bg-rose-50 text-rose-700',
+};
+
 async function getDocumentsWithChunkCounts(productId: string) {
   const db = getDb();
   return db
@@ -17,6 +33,7 @@ async function getDocumentsWithChunkCounts(productId: string) {
       id: documentsTable.id,
       filename: documentsTable.filename,
       storagePath: documentsTable.storagePath,
+      categories: documentsTable.categories,
       status: documentsTable.status,
       errorMessage: documentsTable.errorMessage,
       createdAt: documentsTable.createdAt,
@@ -150,6 +167,19 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
                         {' · '}
                         {new Date(doc.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
+                      {(() => {
+                        let cats: string[] = [];
+                        try { cats = JSON.parse(doc.categories || '[]'); } catch { cats = []; }
+                        return cats.length > 0 ? (
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {cats.map((c) => (
+                              <span key={c} className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${CATEGORY_COLORS[c] ?? 'bg-gray-100 text-gray-600'}`}>
+                                {CATEGORY_LABELS[c] ?? c}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null;
+                      })()}
                       {doc.status === 'failed' && doc.errorMessage && (
                         <p className="text-xs text-red-500 mt-0.5 truncate">{doc.errorMessage}</p>
                       )}

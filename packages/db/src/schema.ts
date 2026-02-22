@@ -46,6 +46,8 @@ export const documents = pgTable('documents', {
   filename: text('filename').notNull(),
   storagePath: text('storage_path').notNull(),
   mimeType: text('mime_type').notNull().default('application/octet-stream'),
+  // Content categories: JSON array of strings
+  categories: text('categories').notNull().default('[]'),
   // Ingestion status: pending | processing | completed | failed
   status: text('status').notNull().default('pending'),
   errorMessage: text('error_message'),

@@ -9,7 +9,7 @@ type Props = {
 };
 
 export function ChatDrawer({ open, onClose }: Props) {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: '/api/chat/stream',
   });
 
@@ -18,13 +18,6 @@ export function ChatDrawer({ open, onClose }: Props) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  // Reset conversation when drawer is closed
-  useEffect(() => {
-    if (!open) {
-      setMessages([]);
-    }
-  }, [open, setMessages]);
 
   return (
     <>

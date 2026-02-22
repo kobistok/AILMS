@@ -1,3 +1,4 @@
+import './env.js'; // must be first — loads .env before any other imports
 import { App, LogLevel } from '@slack/bolt';
 import { registerMessageHandlers } from './handlers/messages.js';
 import { registerMentionHandlers } from './handlers/mentions.js';

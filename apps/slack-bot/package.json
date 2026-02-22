@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS='--env-file=../../.env' tsx watch src/app.ts",
+    "dev": "tsx watch src/app.ts",
     "build": "tsc",
     "start": "node dist/app.js",
     "typecheck": "tsc --noEmit"
@@ -12,6 +12,7 @@
     "@ailms/ai": "workspace:*",
     "@ailms/db": "workspace:*",
     "@slack/bolt": "^3.22.0",
+    "dotenv": "^16.0.0",
     "express": "^4.21.0",
     "inngest": "^3.22.0"
   },

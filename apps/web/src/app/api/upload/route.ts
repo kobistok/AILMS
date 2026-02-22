@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
 
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
-      const storagePath = `${productId}/${Date.now()}-${file.name}`;
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `${productId}/${Date.now()}-${safeName}`;
 
       // Upload file to Supabase Storage
       const { error: uploadError } = await supabase.storage

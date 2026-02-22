@@ -106,8 +106,8 @@ export default async function DashboardPage() {
 
                 <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Link href={`/upload?productId=${product.id}`} className="text-sm text-blue-600 hover:underline">
-                      Add content
+                    <Link href={`/products/${product.id}`} className="text-sm text-blue-600 hover:underline">
+                      Edit
                     </Link>
                     <span className="text-gray-300">·</span>
                     <span className="text-xs text-gray-400">

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, getSupabase, products as productsTable, documents as documentsTable } from '@ailms/db';
 import { createSupabaseServerClient } from '@/lib/supabase';
 import { eq } from 'drizzle-orm';
-import { ingestDocumentSync } from '@ailms/ai';
+import { ingestDocumentSync } from '@ailms/ai/ingest-sync';
 
 export async function POST(request: NextRequest) {
   try {

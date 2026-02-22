@@ -8,7 +8,8 @@
     "./orchestrator": "./src/orchestrator.ts",
     "./tools": "./src/tools.ts",
     "./embeddings": "./src/embeddings.ts",
-    "./inngest": "./src/inngest.ts"
+    "./inngest": "./src/inngest.ts",
+    "./ingest-sync": "./src/ingest-sync.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

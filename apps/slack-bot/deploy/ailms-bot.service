@@ -12,7 +12,7 @@ WorkingDirectory=/opt/ailms
 EnvironmentFile=/opt/ailms/.env
 
 # Run via pnpm so workspace module resolution works correctly
-ExecStart=/usr/local/bin/pnpm --filter slack-bot run start
+ExecStart=/usr/bin/pnpm --filter slack-bot run start
 
 # Restart automatically on crash, wait 10s between attempts
 Restart=always

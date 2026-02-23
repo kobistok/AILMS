@@ -12,7 +12,7 @@ WorkingDirectory=/opt/ailms/apps/slack-bot
 EnvironmentFile=/opt/ailms/.env
 
 # Run tsx directly from the workspace node_modules
-ExecStart=/opt/ailms/node_modules/.bin/tsx src/app.ts
+ExecStart=/usr/bin/tsx src/app.ts
 
 # Restart automatically on crash, wait 10s between attempts
 Restart=always

@@ -6,13 +6,13 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=ubuntu
-WorkingDirectory=/opt/ailms/apps/slack-bot
+WorkingDirectory=/opt/ailms
 
 # Load all env vars from the root .env file
 EnvironmentFile=/opt/ailms/.env
 
-# Run tsx directly from the workspace node_modules
-ExecStart=/usr/bin/tsx src/app.ts
+# Run via pnpm so workspace module resolution works correctly
+ExecStart=/usr/local/bin/pnpm --filter slack-bot run start
 
 # Restart automatically on crash, wait 10s between attempts
 Restart=always

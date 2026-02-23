@@ -1,0 +1,26 @@
+[Unit]
+Description=AILMS Slack Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/ailms/apps/slack-bot
+
+# Load all env vars from the root .env file
+EnvironmentFile=/opt/ailms/.env
+
+# Run tsx directly from the workspace node_modules
+ExecStart=/opt/ailms/node_modules/.bin/tsx src/app.ts
+
+# Restart automatically on crash, wait 10s between attempts
+Restart=always
+RestartSec=10
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ailms-bot
+
+[Install]
+WantedBy=multi-user.target

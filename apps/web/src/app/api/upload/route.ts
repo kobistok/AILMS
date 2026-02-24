@@ -4,6 +4,16 @@ import { createSupabaseServerClient } from '@/lib/supabase';
 import { eq } from 'drizzle-orm';
 import { ingestDocumentSync } from '@ailms/ai/ingest-sync';
 
+async function getUserOrgName(userId: string): Promise<string | null> {
+  const adminSupabase = getSupabase();
+  const { data } = await adminSupabase
+    .from('profiles')
+    .select('org_name')
+    .eq('id', userId)
+    .single();
+  return (data as { org_name?: string | null } | null)?.org_name ?? null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -23,9 +33,10 @@ export async function POST(request: NextRequest) {
     if (existingProductId) {
       productId = existingProductId;
     } else if (productName) {
+      const orgName = user ? await getUserOrgName(user.id) : null;
       const [product] = await db
         .insert(productsTable)
-        .values({ name: productName, description: productDescription ?? '', createdBy: user?.id ?? null })
+        .values({ name: productName, description: productDescription ?? '', createdBy: user?.id ?? null, orgName })
         .onConflictDoNothing()
         .returning();
 

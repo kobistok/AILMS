@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
 
     await adminSupabase.from('profiles').insert({
       id: user.id,
+      email: user.email ?? null,
       role,
       org_name: orgName,
       onboarding_completed: false,

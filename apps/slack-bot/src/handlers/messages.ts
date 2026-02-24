@@ -1,6 +1,7 @@
 import type { App } from '@slack/bolt';
 import { runOrchestrator } from '@ailms/ai';
 import type { OrchestratorMessage } from '@ailms/ai';
+import { resolveOrgName } from './resolve-org.js';
 
 // Conversation history keyed by DM channel ID
 const dmHistory = new Map<string, OrchestratorMessage[]>();
@@ -28,12 +29,15 @@ export function registerMessageHandlers(app: App) {
     });
 
     try {
+      const senderId = 'user' in message ? message.user : undefined;
+      const orgName = senderId ? await resolveOrgName(senderId, client) : null;
+
       const history = dmHistory.get(message.channel) ?? [];
       history.push({ role: 'user', content: userMessage });
 
       // Keep last 20 messages to avoid token bloat
       const trimmedHistory = history.slice(-20);
-      const result = await runOrchestrator(trimmedHistory);
+      const result = await runOrchestrator(trimmedHistory, { orgName });
 
       trimmedHistory.push({ role: 'assistant', content: result.text });
       dmHistory.set(message.channel, trimmedHistory);

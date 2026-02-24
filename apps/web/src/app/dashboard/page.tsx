@@ -31,11 +31,11 @@ export default async function DashboardPage() {
   const adminSupabase = getSupabase();
   const { data: profileData } = await adminSupabase
     .from('profiles')
-    .select('display_name, role')
+    .select('display_name, role, org_name')
     .eq('id', user.id)
     .single();
 
-  const profile = profileData as { display_name?: string | null; role?: string } | null;
+  const profile = profileData as { display_name?: string | null; role?: string; org_name?: string | null } | null;
   const products = await getProductsWithMeta();
 
   async function signOut() {
@@ -50,6 +50,7 @@ export default async function DashboardPage() {
       <DashboardHeader
         displayName={profile?.display_name ?? user.email ?? 'Account'}
         isAdmin={profile?.role === 'admin'}
+        orgName={profile?.org_name ?? null}
         signOut={signOut}
       />
 

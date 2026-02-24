@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase';
-import { getDb, products as productsTable } from '@ailms/db';
+import { getDb, getSupabase, products as productsTable } from '@ailms/db';
 
 export default function NewProductPage() {
   async function createProduct(formData: FormData) {
@@ -14,10 +14,18 @@ export default function NewProductPage() {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    const adminSupabase = getSupabase();
+    const { data: profileData } = await adminSupabase
+      .from('profiles')
+      .select('org_name')
+      .eq('id', user?.id ?? '')
+      .single();
+    const orgName = (profileData as { org_name?: string | null } | null)?.org_name ?? null;
+
     const db = getDb();
     const [product] = await db
       .insert(productsTable)
-      .values({ name, description, createdBy: user?.id ?? null })
+      .values({ name, description, createdBy: user?.id ?? null, orgName })
       .returning();
 
     redirect(`/upload?productId=${product.id}`);

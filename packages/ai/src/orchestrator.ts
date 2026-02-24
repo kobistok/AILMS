@@ -1,6 +1,7 @@
 import { generateText, streamText, tool, type CoreMessage, type Tool } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
+import { eq } from 'drizzle-orm';
 import { getDb, products as productsTable } from '@ailms/db';
 import { searchProduct, formatSearchResults } from './tools.js';
 
@@ -32,9 +33,11 @@ export type OrchestratorResult = {
  *
  * New products automatically appear as tools — no code changes required.
  */
-async function buildProductTools() {
+async function buildProductTools(orgName?: string | null) {
   const db = getDb();
-  const allProducts = await db.select().from(productsTable);
+  const allProducts = orgName
+    ? await db.select().from(productsTable).where(eq(productsTable.orgName, orgName))
+    : await db.select().from(productsTable);
 
   if (allProducts.length === 0) {
     console.warn('[Orchestrator] No products found in database — tools list is empty');
@@ -67,9 +70,9 @@ async function buildProductTools() {
  */
 export async function runOrchestrator(
   messages: OrchestratorMessage[],
-  options: { maxSteps?: number } = {},
+  options: { maxSteps?: number; orgName?: string | null } = {},
 ): Promise<OrchestratorResult> {
-  const tools = await buildProductTools();
+  const tools = await buildProductTools(options.orgName);
   const maxSteps = options.maxSteps ?? 5;
 
   const result = await generateText({
@@ -105,8 +108,11 @@ export async function askOrchestrator(userMessage: string): Promise<string> {
 /**
  * Streaming variant — returns a streamText result for use with toDataStreamResponse().
  */
-export async function streamOrchestrator(messages: OrchestratorMessage[]) {
-  const tools = await buildProductTools();
+export async function streamOrchestrator(
+  messages: OrchestratorMessage[],
+  options: { orgName?: string | null } = {},
+) {
+  const tools = await buildProductTools(options.orgName);
   return streamText({
     model: anthropic('claude-sonnet-4-6'),
     system: SALES_ENABLEMENT_SYSTEM_PROMPT,

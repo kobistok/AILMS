@@ -32,6 +32,7 @@ export const products = pgTable('products', {
   description: text('description').notNull().default(''),
   systemPrompt: text('system_prompt').notNull().default(''),
   createdBy: text('created_by'),  // Supabase Auth user ID
+  orgName: text('org_name'),      // Company name — scopes the product to an org
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
@@ -83,6 +84,7 @@ export const chunks = pgTable(
 // One row per authenticated user (extends auth.users).
 export const profiles = pgTable('profiles', {
   id: text('id').primaryKey(),  // Supabase auth.users UUID stored as text
+  email: text('email'),
   displayName: text('display_name'),
   orgName: text('org_name'),
   industry: text('industry'),

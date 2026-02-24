@@ -12,18 +12,21 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState('');
   const [orgName, setOrgName] = useState('');
+  const [orgNameLocked, setOrgNameLocked] = useState(false);
   const [industry, setIndustry] = useState('');
   const [employeeCount, setEmployeeCount] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Pre-fill from existing profile (e.g., org_name inherited from invitation)
     fetch('/api/profile')
       .then((r) => r.json())
       .then((profile: ProfileData) => {
         if (profile.display_name) setDisplayName(profile.display_name);
-        if (profile.org_name) setOrgName(profile.org_name);
+        if (profile.org_name) {
+          setOrgName(profile.org_name);
+          setOrgNameLocked(true); // Pre-filled from invite — lock it
+        }
       })
       .catch(() => {});
   }, []);
@@ -42,12 +45,14 @@ export default function OnboardingPage() {
 
       if (!res.ok) {
         const data = await res.json() as { error?: string };
-        throw new Error(data.error ?? 'Failed to save profile');
+        setError(data.error === 'org_taken' ? 'org_taken' : (data.error ?? 'Failed to save profile'));
+        setLoading(false);
+        return;
       }
 
       router.push('/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } catch {
+      setError('Something went wrong');
       setLoading(false);
     }
   }
@@ -82,11 +87,22 @@ export default function OnboardingPage() {
               id="orgName"
               type="text"
               value={orgName}
-              onChange={(e) => setOrgName(e.target.value)}
+              onChange={orgNameLocked ? undefined : (e) => setOrgName(e.target.value)}
+              readOnly={orgNameLocked}
               required
               placeholder="Acme Corp"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                orgNameLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''
+              }`}
             />
+            {orgNameLocked && (
+              <p className="text-xs text-gray-400 mt-1">Set by your team admin</p>
+            )}
+            {error === 'org_taken' && (
+              <p className="text-sm text-red-600 mt-1">
+                This company name is already registered. If your team already uses AILMS, ask your admin for an invite.
+              </p>
+            )}
           </div>
 
           <div>
@@ -131,7 +147,9 @@ export default function OnboardingPage() {
             </select>
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && error !== 'org_taken' && (
+            <p className="text-sm text-red-600">{error}</p>
+          )}
 
           <button
             type="submit"

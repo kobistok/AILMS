@@ -6,10 +6,11 @@ import Link from 'next/link';
 type Props = {
   displayName: string;
   isAdmin: boolean;
+  orgName: string | null;
   signOut: () => Promise<void>;
 };
 
-export function UserMenu({ displayName, isAdmin, signOut }: Props) {
+export function UserMenu({ displayName, isAdmin, orgName, signOut }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -39,7 +40,13 @@ export function UserMenu({ displayName, isAdmin, signOut }: Props) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-44 bg-white rounded-md border border-gray-200 shadow-lg z-50 py-1">
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md border border-gray-200 shadow-lg z-50 py-1">
+          {orgName && (
+            <div className="px-4 py-2 border-b border-gray-100">
+              <p className="text-xs text-gray-400">Company</p>
+              <p className="text-sm font-medium text-gray-700 truncate">{orgName}</p>
+            </div>
+          )}
           {isAdmin && (
             <Link
               href="/settings/team"

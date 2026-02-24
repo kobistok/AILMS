@@ -25,7 +25,9 @@
         "im:write",
         "reactions:write",
         "channels:history",
-        "groups:history"
+        "groups:history",
+        "users:read",
+        "users:read.email"
       ]
     }
   },

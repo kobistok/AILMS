@@ -1,6 +1,7 @@
 import type { App } from '@slack/bolt';
 import { runOrchestrator } from '@ailms/ai';
 import type { OrchestratorMessage } from '@ailms/ai';
+import { resolveOrgName } from './resolve-org.js';
 
 // In-memory conversation history per Slack thread
 // Key: threadTs (or channel for non-threaded messages)
@@ -21,11 +22,13 @@ export function registerMentionHandlers(app: App) {
     });
 
     try {
+      const orgName = event.user ? await resolveOrgName(event.user, client) : null;
+
       // Build conversation history for this thread
       const history = threadHistory.get(threadKey) ?? [];
       history.push({ role: 'user', content: userMessage });
 
-      const result = await runOrchestrator(history);
+      const result = await runOrchestrator(history, { orgName });
 
       // Store assistant response in history
       history.push({ role: 'assistant', content: result.text });

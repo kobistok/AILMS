@@ -36,10 +36,25 @@ export async function POST(request: NextRequest) {
     };
 
     const adminSupabase = getSupabase();
+
+    // Check if org_name is already taken by a different user
+    if (body.orgName) {
+      const { data: existing } = await adminSupabase
+        .from('profiles')
+        .select('id')
+        .eq('org_name', body.orgName)
+        .neq('id', user.id)
+        .maybeSingle();
+      if (existing) {
+        return NextResponse.json({ error: 'org_taken' }, { status: 409 });
+      }
+    }
+
     const { data: profile, error } = await adminSupabase
       .from('profiles')
       .upsert({
         id: user.id,
+        email: user.email ?? null,
         display_name: body.displayName ?? null,
         org_name: body.orgName ?? null,
         industry: body.industry ?? null,

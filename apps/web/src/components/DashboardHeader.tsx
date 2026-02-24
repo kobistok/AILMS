@@ -8,10 +8,11 @@ import { ChatDrawer } from './ChatDrawer';
 type Props = {
   displayName: string;
   isAdmin: boolean;
+  orgName: string | null;
   signOut: () => Promise<void>;
 };
 
-export function DashboardHeader({ displayName, isAdmin, signOut }: Props) {
+export function DashboardHeader({ displayName, isAdmin, orgName, signOut }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
@@ -38,6 +39,7 @@ export function DashboardHeader({ displayName, isAdmin, signOut }: Props) {
             <UserMenu
               displayName={displayName}
               isAdmin={isAdmin}
+              orgName={orgName}
               signOut={signOut}
             />
           </div>
